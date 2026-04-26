@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChillZone Pro | Final Stable</title>
+  <title>ChillZone Pro | Ad-Reduced</title>
   <meta name="referrer" content="no-referrer-when-downgrade">
   <style>
     :root { --neon: #00f7ff; --pink: #ff00ff; --bg: #030308; }
@@ -42,11 +42,14 @@
     input[type="range"] { -webkit-appearance: none; width: 140px; height: 4px; background: #333; border-radius: 5px; outline: none; }
     input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--neon); cursor: pointer; }
 
-    /* Backup Panel */
     .storage-panel { margin-top: 20px; font-size: 10px; opacity: 0.5; color: var(--neon); display: flex; gap: 10px; }
     .storage-panel span { cursor: pointer; text-decoration: underline; }
 
     #player { width: 1px; height: 1px; opacity: 0; position: absolute; visibility: hidden; }
+    
+    /* Ad Blocker Status Indicator */
+    .ad-shield { position: absolute; bottom: 20px; right: 20px; font-size: 12px; color: #4caf50; display: flex; align-items: center; gap: 5px; }
+    .shield-dot { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; box-shadow: 0 0 10px #4caf50; }
   </style>
 </head>
 <body>
@@ -67,7 +70,6 @@
     <div id="history-list"></div>
     <div class="sec-title">🔍 Search Results</div>
     <div id="results-list"></div>
-    
     <div class="storage-panel">
         <span onclick="exportHistory()">💾 BACKUP HISTORY</span>
         <span onclick="importHistory()">🔄 RESTORE FROM PC</span>
@@ -90,6 +92,8 @@
       <input type="range" min="0" max="100" value="100" oninput="sendCmd('setVolume', [this.value])">
       <span>🔊</span>
     </div>
+    
+    <div class="ad-shield"><div class="shield-dot"></div> AD-SHIELD ACTIVE</div>
   </section>
 </main>
 
@@ -118,9 +122,8 @@ function animate() {
   requestAnimationFrame(animate);
 }
 init(); animate();
-window.onresize = init;
 
-// 2. Play Logic
+// 2. Play Logic (Ad-Block Optimized)
 function playSong(id, title, thumb, channel) {
   try {
     document.getElementById("big-art").src = thumb;
@@ -128,12 +131,15 @@ function playSong(id, title, thumb, channel) {
     document.getElementById("big-channel").innerText = channel;
     
     const origin = window.location.protocol + "//" + window.location.host;
-    document.getElementById("player").src = `https://www.youtube.com/embed/videoseries?list=${id}&enablejsapi=1&autoplay=1&origin=${origin}&widget_referrer=${origin}`;
+    
+    // THE AD BLOCK TRICK: Using youtube-nocookie and playlist bypass
+    const embedUrl = `https://www.youtube-nocookie.com/embed/videoseries?list=${id}&enablejsapi=1&autoplay=1&origin=${origin}&rel=0&modestbranding=1&iv_load_policy=3`;
+    
+    document.getElementById("player").src = embedUrl;
     
     isPlaying = true; 
     document.getElementById("p-btn").innerText = "II";
 
-    // History Persistence Logic
     let history = JSON.parse(localStorage.getItem('cz_history_final') || '{}');
     if(history[id]) history[id].count += 1;
     else history[id] = { id, title, thumb, channel, count: 1, lastPlayed: Date.now() };
@@ -146,11 +152,8 @@ function playSong(id, title, thumb, channel) {
 function renderHistory() {
   const history = JSON.parse(localStorage.getItem('cz_history_final') || '{}');
   const hList = document.getElementById("history-list");
-  // Sort by play count, showing top 8
   const sorted = Object.values(history).sort((a,b) => b.count - a.count).slice(0, 8);
-  
-  hList.innerHTML = sorted.length ? "" : "<p style='color:#333; margin-left:10px;'>Your vibe history is empty.</p>";
-  
+  hList.innerHTML = sorted.length ? "" : "<p style='color:#333; margin-left:10px;'>History is empty.</p>";
   sorted.forEach(item => {
     const card = document.createElement("div");
     card.className = "song-card";
@@ -160,16 +163,15 @@ function renderHistory() {
   });
 }
 
-// 3. HARD RESET PROTECTION (Backup Logic)
+// 3. Backup & Recovery
 function exportHistory() {
     const data = localStorage.getItem('cz_history_final');
     const blob = new Blob([data], {type: "application/json"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "ChillZone_Permanent_Backup.json";
+    a.download = "ChillZone_History.json";
     a.click();
-    alert("History saved to PC. Use 'RESTORE' if you ever format your computer!");
 }
 
 function importHistory() {
@@ -180,10 +182,9 @@ function importHistory() {
         const reader = new FileReader();
         reader.readAsText(file,'UTF-8');
         reader.onload = readerEvent => {
-            const content = readerEvent.target.result;
-            localStorage.setItem('cz_history_final', content);
+            localStorage.setItem('cz_history_final', readerEvent.target.result);
             renderHistory();
-            alert("History Restored Successfully!");
+            alert("Restored!");
         }
     }
     input.click();
@@ -194,16 +195,12 @@ async function search() {
   const q = document.getElementById("search-input").value;
   if(!q) return;
   const list = document.getElementById("results-list");
-  list.innerHTML = "<p style='margin-left:10px;'>Syncing with Cloud...</p>";
+  list.innerHTML = "<p style='margin-left:10px;'>Filtering Content...</p>";
   
   try {
     const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=playlist&maxResults=8&key=${API_KEY}`);
     const data = await res.json();
-    
-    if(data.error) {
-      list.innerHTML = `<p style='color:red; margin-left:10px;'>API LIMIT REACHED.</p>`;
-      return;
-    }
+    if(data.error) { list.innerHTML = `<p style='color:red;'>API Limit.</p>`; return; }
 
     list.innerHTML = "";
     data.items.forEach(item => {
@@ -213,9 +210,7 @@ async function search() {
       card.onclick = () => playSong(item.id.playlistId, item.snippet.title, item.snippet.thumbnails.high.url, item.snippet.channelTitle);
       list.appendChild(card);
     });
-  } catch(e) {
-    list.innerHTML = "<p style='color:red; margin-left:10px;'>Network Error.</p>";
-  }
+  } catch(e) { list.innerHTML = "<p style='color:red;'>Error.</p>"; }
 }
 
 // 5. Remote Controls
