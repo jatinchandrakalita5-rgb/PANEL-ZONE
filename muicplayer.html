@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChillZone Pro | Final Stable</title>
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <style>
+    :root { --neon: #00f7ff; --pink: #ff00ff; --bg: #030308; }
+    body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+    header { padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--neon); backdrop-filter: blur(15px); z-index: 10; }
+    .logo { font-size: 1.6rem; letter-spacing: 3px; font-weight: bold; text-transform: uppercase; }
+    .logo span { color: var(--pink); text-shadow: 0 0 10px var(--pink); }
+
+    .search-container { display: flex; gap: 12px; width: 40%; }
+    input[type="text"] { flex: 1; padding: 12px 25px; border-radius: 30px; border: 1px solid #444; background: #000; color: white; outline: none; }
+    input:focus { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
+    .btn-search { padding: 10px 25px; border-radius: 30px; border: none; background: var(--pink); color: white; font-weight: bold; cursor: pointer; }
+
+    main { display: flex; flex: 1; overflow: hidden; }
+    #playlist-side { width: 32%; background: rgba(0,0,0,0.5); border-right: 1px solid rgba(255,255,255,0.05); overflow-y: auto; padding: 20px; }
+    #player-side { width: 68%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+
+    .sec-title { color: var(--neon); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; margin: 20px 0 10px 5px; opacity: 0.8; }
+    .song-card { display: flex; align-items: center; padding: 15px; margin-bottom: 12px; background: rgba(255,255,255,0.03); border-radius: 15px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+    .song-card:hover { border-color: var(--neon); transform: translateX(10px); background: rgba(0,247,255,0.05); }
+    .song-card img { width: 55px; height: 55px; border-radius: 10px; margin-right: 15px; pointer-events: none; }
+    .play-count { margin-left: auto; color: var(--pink); font-size: 0.7rem; border: 1px solid var(--pink); padding: 2px 6px; border-radius: 10px; }
+
+    .art-container { position: relative; padding: 10px; border-radius: 35px; background: linear-gradient(45deg, var(--neon), var(--pink)); animation: borderGlow 3s infinite alternate; margin-bottom: 30px; }
+    @keyframes borderGlow { from { box-shadow: 0 0 20px var(--neon); } to { box-shadow: 0 0 60px var(--pink); } }
+    #big-art { width: 340px; height: 340px; border-radius: 25px; object-fit: cover; }
+
+    .controls { display: flex; gap: 30px; align-items: center; }
+    .btn-circle { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--neon); color: var(--neon); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 26px; transition: 0.3s; user-select: none; }
+    .btn-circle:hover { background: var(--neon); color: black; box-shadow: 0 0 25px var(--neon); }
+    .play-btn { width: 85px; height: 85px; border-color: var(--pink); color: var(--pink); font-size: 36px; }
+
+    .volume-control { margin-top: 30px; display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 20px; border: 1px solid var(--neon); }
+    input[type="range"] { -webkit-appearance: none; width: 140px; height: 4px; background: #333; border-radius: 5px; outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--neon); cursor: pointer; }
+
+    /* Backup Panel */
+    .storage-panel { margin-top: 20px; font-size: 10px; opacity: 0.5; color: var(--neon); display: flex; gap: 10px; }
+    .storage-panel span { cursor: pointer; text-decoration: underline; }
+
+    #player { width: 1px; height: 1px; opacity: 0; position: absolute; visibility: hidden; }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<header>
+  <div class="logo">CHILL<span>ZONE</span></div>
+  <div class="search-container">
+    <input type="text" id="search-input" placeholder="Search Music..." onkeydown="if(event.key==='Enter') search()">
+    <button class="btn-search" onclick="search()">SEARCH</button>
+  </div>
+</header>
+
+<main>
+  <section id="playlist-side">
+    <div class="sec-title">🔥 Permanent History</div>
+    <div id="history-list"></div>
+    <div class="sec-title">🔍 Search Results</div>
+    <div id="results-list"></div>
+    
+    <div class="storage-panel">
+        <span onclick="exportHistory()">💾 BACKUP HISTORY</span>
+        <span onclick="importHistory()">🔄 RESTORE FROM PC</span>
+    </div>
+  </section>
+
+  <section id="player-side">
+    <div class="art-container"><img id="big-art" src="https://via.placeholder.com/340/111/00f7ff?text=ChillZone+Pro"></div>
+    <h2 id="big-title">Vibe Station</h2>
+    <p id="big-channel" style="color:#666;">Ready to play</p>
+
+    <div class="controls">
+      <div class="btn-circle" onclick="prev()">⏮</div>
+      <div class="btn-circle play-btn" id="p-btn" onclick="toggle()">II</div>
+      <div class="btn-circle" onclick="next()">⏭</div>
+    </div>
+
+    <div class="volume-control">
+      <span>🔈</span>
+      <input type="range" min="0" max="100" value="100" oninput="sendCmd('setVolume', [this.value])">
+      <span>🔊</span>
+    </div>
+  </section>
+</main>
+
+<iframe id="player" src="" allow="autoplay; encrypted-media"></iframe>
+
+<script>
+const API_KEY = "AIzaSyCkiv8OYZMoGke5EWCCc4oWuJx8wdLk13c";
+let isPlaying = true;
+
+// 1. Particle System
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let dots = [];
+function init() {
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  dots = [];
+  for(let i=0; i<40; i++) dots.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
+}
+function animate() {
+  ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "#00f7ff";
+  dots.forEach(d => {
+    d.x += d.vx; d.y += d.vy;
+    if(d.x<0 || d.x>canvas.width) d.vx*=-1; if(d.y<0 || d.y>canvas.height) d.vy*=-1;
+    ctx.beginPath(); ctx.arc(d.x, d.y, 1.2, 0, Math.PI*2); ctx.fill();
+  });
+  requestAnimationFrame(animate);
+}
+init(); animate();
+window.onresize = init;
+
+// 2. Play Logic
+function playSong(id, title, thumb, channel) {
+  try {
+    document.getElementById("big-art").src = thumb;
+    document.getElementById("big-title").innerText = title;
+    document.getElementById("big-channel").innerText = channel;
+    
+    const origin = window.location.protocol + "//" + window.location.host;
+    document.getElementById("player").src = `https://www.youtube.com/embed/videoseries?list=${id}&enablejsapi=1&autoplay=1&origin=${origin}&widget_referrer=${origin}`;
+    
+    isPlaying = true; 
+    document.getElementById("p-btn").innerText = "II";
+
+    // History Persistence Logic
+    let history = JSON.parse(localStorage.getItem('cz_history_final') || '{}');
+    if(history[id]) history[id].count += 1;
+    else history[id] = { id, title, thumb, channel, count: 1, lastPlayed: Date.now() };
+    
+    localStorage.setItem('cz_history_final', JSON.stringify(history));
+    renderHistory();
+  } catch(e) { console.error("Play Error:", e); }
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('cz_history_final') || '{}');
+  const hList = document.getElementById("history-list");
+  // Sort by play count, showing top 8
+  const sorted = Object.values(history).sort((a,b) => b.count - a.count).slice(0, 8);
+  
+  hList.innerHTML = sorted.length ? "" : "<p style='color:#333; margin-left:10px;'>Your vibe history is empty.</p>";
+  
+  sorted.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "song-card";
+    card.innerHTML = `<img src="${item.thumb}"><div><strong>${item.title}</strong><br><small>${item.channel}</small></div><div class="play-count">${item.count}</div>`;
+    card.onclick = () => playSong(item.id, item.title, item.thumb, item.channel);
+    hList.appendChild(card);
+  });
+}
+
+// 3. HARD RESET PROTECTION (Backup Logic)
+function exportHistory() {
+    const data = localStorage.getItem('cz_history_final');
+    const blob = new Blob([data], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ChillZone_Permanent_Backup.json";
+    a.click();
+    alert("History saved to PC. Use 'RESTORE' if you ever format your computer!");
+}
+
+function importHistory() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.readAsText(file,'UTF-8');
+        reader.onload = readerEvent => {
+            const content = readerEvent.target.result;
+            localStorage.setItem('cz_history_final', content);
+            renderHistory();
+            alert("History Restored Successfully!");
+        }
+    }
+    input.click();
+}
+
+// 4. Search
+async function search() {
+  const q = document.getElementById("search-input").value;
+  if(!q) return;
+  const list = document.getElementById("results-list");
+  list.innerHTML = "<p style='margin-left:10px;'>Syncing with Cloud...</p>";
+  
+  try {
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=playlist&maxResults=8&key=${API_KEY}`);
+    const data = await res.json();
+    
+    if(data.error) {
+      list.innerHTML = `<p style='color:red; margin-left:10px;'>API LIMIT REACHED.</p>`;
+      return;
+    }
+
+    list.innerHTML = "";
+    data.items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "song-card";
+      card.innerHTML = `<img src="${item.snippet.thumbnails.medium.url}"><div><strong>${item.snippet.title}</strong><br><small>${item.snippet.channelTitle}</small></div>`;
+      card.onclick = () => playSong(item.id.playlistId, item.snippet.title, item.snippet.thumbnails.high.url, item.snippet.channelTitle);
+      list.appendChild(card);
+    });
+  } catch(e) {
+    list.innerHTML = "<p style='color:red; margin-left:10px;'>Network Error.</p>";
+  }
+}
+
+// 5. Remote Controls
+function sendCmd(f, a=[]) {
+  const player = document.getElementById("player");
+  if(!player.src) return;
+  player.contentWindow.postMessage(JSON.stringify({"event":"command","func":f,"args":a}), "*");
+}
+
+function toggle() { 
+  if(isPlaying) { sendCmd("pauseVideo"); document.getElementById("p-btn").innerText = "▶"; } 
+  else { sendCmd("playVideo"); document.getElementById("p-btn").innerText = "II"; }
+  isPlaying = !isPlaying;
+}
+function next() { sendCmd("nextVideo"); }
+function prev() { sendCmd("previousVideo"); }
+
+window.onload = renderHistory;
+</script>
+</body>
+</html>
