@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PRIMEX PNLZ</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: black;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* RGB BACKGROUND */
+body::before {
+  content: "";
+  position: fixed;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, red, orange, yellow, green, cyan, blue, violet);
+  background-size: 400%;
+  animation: rgb 10s linear infinite;
+  z-index: -1;
+  filter: blur(120px);
+}
+
+@keyframes rgb {
+  0% { background-position: 0% }
+  100% { background-position: 100% }
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+}
+
+/* LOGO */
+.logo {
+  color: red;
+  font-size: 22px;
+  text-shadow: 0 0 10px red, 0 0 20px red;
+}
+
+/* MENU */
+.menu span {
+  margin: 10px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+.menu span:hover {
+  background: rgba(255,0,0,0.2);
+  box-shadow: 0 0 10px red;
+}
+
+/* 🔥 NEON LOGOUT BUTTON */
+.logout-btn {
+  padding: 8px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  background: black;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  font-weight: bold;
+}
+
+.logout-btn::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, red, cyan, red);
+  background-size: 200%;
+  z-index: -1;
+  animation: borderMove 3s linear infinite;
+}
+
+@keyframes borderMove {
+  0% { background-position: 0% }
+  100% { background-position: 200% }
+}
+
+.logout-btn:hover {
+  box-shadow: 0 0 10px red, 0 0 20px cyan, 0 0 30px red;
+}
+
+.logout-btn:active {
+  transform: scale(0.95);
+}
+
+/* SECTIONS */
+.section {
+  display: none;
+  padding: 50px;
+}
+
+.active {
+  display: block;
+}
+
+/* NEON TEXT */
+h1, h2 {
+  text-shadow: 0 0 5px red, 0 0 10px red, 0 0 20px red;
+}
+
+/* BOXES */
+.boxes {
+  display: flex;
+  gap: 25px;
+}
+
+/* CARDS */
+.card {
+  flex: 1;
+  background: rgba(0,0,0,0.7);
+  padding: 30px;
+  border-radius: 15px;
+  position: relative;
+  transition: 0.3s;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 15px;
+  background: linear-gradient(90deg, red, cyan, red);
+  opacity: 0;
+}
+
+.card:hover::before {
+  opacity: 1;
+  animation: glow 2s linear infinite;
+}
+
+@keyframes glow {
+  0% { background-position: 0% }
+  100% { background-position: 200% }
+}
+
+button {
+  padding: 10px 20px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 10px red;
+}
+
+button:hover {
+  box-shadow: 0 0 20px red;
+}
+
+pre {
+  font-size: 14px;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- ✅ LOGIN CHECK -->
+<script>
+if (!localStorage.getItem("savedUser")) {
+  window.location.href = "index.html";
+}
+</script>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="logo">PRIMEX PNLZ</div>
+
+  <div class="menu">
+    <span onclick="show('home')">Home</span>
+    <span onclick="show('features')">Features</span>
+    <span onclick="show('products')">Products</span>
+    <span onclick="goDiscord()">Support</span>
+
+    <!-- 🔥 LOGOUT BUTTON -->
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="section active">
+  <h1>🔥 Welcome to PRIMEX PNLZ 🔥</h1>
+  <button onclick="goDiscord()">Join Discord</button>
+</div>
+
+<!-- FEATURES -->
+<div id="features" class="section">
+  <div class="boxes">
+
+    <div class="card">
+      <h2>24/7 SUPPORT</h2>
+      <p>Always available</p>
+    </div>
+
+    <div class="card">
+<pre>
+AIMBOT VISIBLE
+NO RECOIL
+ESP LINE
+ESP BOX
+RESET CACHE
+</pre>
+    </div>
+
+    <div class="card">
+<pre>
+PREMIUM FEATURES
+HIGH PERFORMANCE
+SECURE SYSTEM
+</pre>
+    </div>
+
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div id="products" class="section">
+  <h2>Products Coming Soon</h2>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function goDiscord() {
+  window.location.href = "https://discord.gg/NUzDa2N7Fs";
+}
+
+/* ✅ FIXED LOGOUT */
+function logout() {
+  localStorage.clear();
+  window.location.href = "index.html";
+}
+
+/* CLICK GLOW EFFECT */
+document.addEventListener("click", function(e) {
+
+  let glow = document.createElement("div");
+
+  glow.style.position = "fixed";
+  glow.style.left = e.clientX + "px";
+  glow.style.top = e.clientY + "px";
+  glow.style.width = "20px";
+  glow.style.height = "20px";
+  glow.style.borderRadius = "50%";
+  glow.style.pointerEvents = "none";
+
+  glow.style.boxShadow = `
+    0 0 20px red,
+    0 0 40px orange,
+    0 0 60px cyan
+  `;
+
+  glow.style.transform = "translate(-50%, -50%)";
+  glow.style.transition = "0.6s";
+
+  document.body.appendChild(glow);
+
+  setTimeout(() => {
+    glow.style.transform = "translate(-50%, -50%) scale(8)";
+    glow.style.opacity = "0";
+  }, 10);
+
+  setTimeout(() => {
+    glow.remove();
+  }, 600);
+
+});
+</script>
+
+</body>
+</html>
