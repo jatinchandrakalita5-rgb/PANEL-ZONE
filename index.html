@@ -66,7 +66,6 @@
 let currentMusicCaptcha = "";
 
 function generateMusicCaptcha() {
-  // Generates exactly a 2-digit number
   currentMusicCaptcha = Math.floor(10 + Math.random() * 90).toString();
   document.getElementById("captchaDisplay").innerText = currentMusicCaptcha;
 }
@@ -83,8 +82,10 @@ function showRayId(type, target) {
   
   box.style.display = "block";
   txt.innerText = type === "dash" ? "Confirming Ray ID..." : "Cloud Syncing Music...";
-  // Generates a confirmed Ray ID
   ray.innerText = "RAY ID: " + Math.random().toString(36).substring(2, 12).toUpperCase();
+
+  // ✅ THE FIX: SAVE LOGIN KEY BEFORE REDIRECTING
+  localStorage.setItem("savedUser", "gullu");
 
   setTimeout(() => {
     window.location.href = target;
@@ -96,7 +97,6 @@ function loginDashboard() {
   const p = document.getElementById("pass").value;
 
   if(u === "gullu" && p === "1") {
-    // Redirects correctly to dashboard.html
     showRayId("dash", "dashboard.html");
   } else {
     document.getElementById("msg").innerText = "Wrong Credentials! ❌";
@@ -105,10 +105,7 @@ function loginDashboard() {
 
 function loginMusic() {
   const cap = document.getElementById("musicCaptcha").value;
-  
-  // Validates the 2-digit number captcha
   if(cap === currentMusicCaptcha) {
-    // Redirects correctly to muicplayer.html
     showRayId("music", "muicplayer.html");
   } else {
     document.getElementById("msg").innerText = "Invalid Captcha! ❌";
